@@ -1,0 +1,17 @@
+{
+  "orbit": {
+    "geometry_sha256": "5cab12f56550a1a41e447a120bec407c86cb1688e7a01f6031443d8e64c058aa",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "quarter": {
+    "geometry_sha256": "b13431626cb7bb69e52f8720d33c429a75e98b6e2a29183325240c30424b042c",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "wave": {
+    "geometry_sha256": "23794512d467996ee2a0328c5eb4531a08bac2c0347ae6238e00d318d65df521",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  }
+}

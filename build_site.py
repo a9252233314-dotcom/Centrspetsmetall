@@ -7,6 +7,8 @@ import json, hashlib
 from bench_catalog import BENCHES, BENCH_ROUTE, prepare_assets, bench_cards, teaser as bench_teaser, build_benches
 from lamp_catalog import LAMPS, LAMP_ROUTE, prepare_assets as prepare_lamp_assets, lamp_cards, teaser as lamp_teaser, build_lamps
 
+from hatch_catalog import HATCHES, HATCH_ROUTE, prepare_assets as prepare_hatch_assets, hatch_cards, teaser as hatch_teaser, build_hatches
+
 ROOT=Path(__file__).resolve().parent
 CONFIG=json.loads((ROOT/'site.config.json').read_text(encoding='utf-8'))
 PRODUCTS=json.loads((ROOT/'products.json').read_text(encoding='utf-8'))
@@ -14,6 +16,7 @@ DIRECTIONS=json.loads((ROOT/'directions.json').read_text(encoding='utf-8'))
 SERVICES=json.loads((ROOT/'services.json').read_text(encoding='utf-8'))
 CSS_VERSION=hashlib.sha256((ROOT/'modern.css').read_bytes()).hexdigest()[:10]
 JS_VERSION=hashlib.sha256((ROOT/'modern.js').read_bytes()).hexdigest()[:10]
+HATCH_CSS_VERSION=hashlib.sha256((ROOT/'hatch-catalog.css').read_bytes()).hexdigest()[:10]
 LAMP_CSS_VERSION=hashlib.sha256((ROOT/'lamp-catalog.css').read_bytes()).hexdigest()[:10]
 BENCH_CSS_VERSION=hashlib.sha256((ROOT/'bench-catalog.css').read_bytes()).hexdigest()[:10]
 BASE=CONFIG['canonicalBase'].rstrip('/')+'/'
@@ -71,7 +74,7 @@ def header(r):
     return f'''<a class="skip" href="#main">Перейти к содержимому</a><header class="site-header"><div class="container header-inner"><a class="brand" href="{r}" aria-label="Центрспецметалл — на главную">{image('assets/csm-logo.png','',r)}<span><strong>ЦЕНТРСПЕЦМЕТАЛЛ</strong><small>Изделия. Литьё. Ваши идеи.</small></span></a><nav class="main-nav" id="main-nav" aria-label="Основная навигация"><a href="{r}catalog/">Каталог</a><a href="{r}production/">Производство</a><a href="{r}blagoustroystvo/">Новые направления</a><a href="{r}contacts/">Контакты</a></nav><div class="header-contact"><a class="phone" href="tel:{tel(CONFIG['phones'][0])}">{e(CONFIG['phones'][0])}</a>{button('Обсудить заказ',style='small')}</div><button class="menu-toggle js-only" id="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Открыть меню">☰</button></div></header>'''
 def footer(r):
     cats=''.join(f'<a href="{r}{catroute(key)}">{e(c["name"])}</a>' for key,c in CATEGORIES.items())
-    cats+=f'<a href="{r}{BENCH_ROUTE}">Чугунные скамейки</a><a href="{r}{LAMP_ROUTE}">Уличные фонари</a>'
+    cats+=f'<a href="{r}{BENCH_ROUTE}">Чугунные скамейки</a><a href="{r}{LAMP_ROUTE}">Уличные фонари</a><a href="{r}{HATCH_ROUTE}">Люки и крышки</a>'
     return f'''<footer class="site-footer"><div class="container"><div class="footer-main"><div class="footer-about"><a class="brand" href="{r}">{image('assets/csm-logo.png','',r)}<span><strong>ЦЕНТРСПЕЦМЕТАЛЛ</strong><small>Изделия. Литьё. Ваши идеи.</small></span></a><p>Изделия из чугуна, стали и цветных сплавов. От готовой идеи до согласованного заказа.</p></div><nav class="footer-links" aria-label="Каталог в подвале"><strong>Каталог</strong>{cats}</nav><nav class="footer-links" aria-label="О компании"><strong>Полезное</strong><a href="{r}production/">Производственные возможности</a><a href="{r}blagoustroystvo/">Благоустройство и новые идеи</a><a href="{r}delivery/">Заказ и доставка</a><a href="{r}contacts/">Контакты</a><a href="{r}assets/csm-presentation.pdf" target="_blank" rel="noopener">Презентация компании ↗</a></nav><div class="footer-contacts"><a href="tel:{tel(CONFIG['phones'][0])}">{e(CONFIG['phones'][0])}</a><a href="tel:{tel(CONFIG['phones'][1])}">{e(CONFIG['phones'][1])}</a><a class="email" href="mailto:{EMAIL}">{EMAIL}</a><p>Производство — г. {e(CONFIG["city"])}.<br>Расскажите, что хотите изготовить.</p></div></div><div class="footer-bottom"><span>© 2026 ЦЕНТРСПЕЦМЕТАЛЛ</span><span>Цена, срок и комплектация согласуются по заказу.</span><a href="{r}sitemap.xml">Карта сайта</a></div></div></footer><div class="mobile-contact"><a class="button secondary" href="tel:{tel(CONFIG['phones'][0])}">Позвонить</a>{button('Обсудить заказ',style='')}</div>'''
 def dialog():
     options=''.join(f'<option value="{e(p["id"])}">{e(p["name"])}</option>' for p in PRODUCTS)
@@ -92,7 +95,7 @@ def page(path,title,description,content,breadcrumbs=None,extra_schema=None,img='
         schema.append({'@type':'BreadcrumbList','itemListElement':entries})
     schema.append({'@type':'WebPage','@id':canonical+'#webpage','url':canonical,'name':title,'description':description,'inLanguage':'ru-RU','isPartOf':{'@id':absolute('#website')}})
     if extra_schema:schema.extend(extra_schema)
-    head=f'''<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><meta name="description" content="{e(description)}"><meta name="theme-color" content="#233e32"><meta name="robots" content="{'noindex,follow' if noindex else 'index,follow,max-image-preview:large'}"><link rel="canonical" href="{e(canonical)}"><link rel="icon" href="{r}assets/csm-logo.png" type="image/png"><meta property="og:type" content="website"><meta property="og:locale" content="ru_RU"><meta property="og:site_name" content="{NAME}"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(description)}"><meta property="og:url" content="{e(canonical)}"><meta property="og:image" content="{e(absolute(img))}"><meta property="og:image:alt" content="Изделия ЦЕНТРСПЕЦМЕТАЛЛ"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="{r}modern.css?v={CSS_VERSION}"><link rel="stylesheet" href="{r}bench-catalog.css?v={BENCH_CSS_VERSION}"><link rel="stylesheet" href="{r}lamp-catalog.css?v={LAMP_CSS_VERSION}"><script src="{r}modern.js?v={JS_VERSION}" defer></script><script type="application/ld+json">{json.dumps({'@context':'https://schema.org','@graph':schema},ensure_ascii=False).replace('</','<\\/')}</script></head>'''
+    head=f'''<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><meta name="description" content="{e(description)}"><meta name="theme-color" content="#233e32"><meta name="robots" content="{'noindex,follow' if noindex else 'index,follow,max-image-preview:large'}"><link rel="canonical" href="{e(canonical)}"><link rel="icon" href="{r}assets/csm-logo.png" type="image/png"><meta property="og:type" content="website"><meta property="og:locale" content="ru_RU"><meta property="og:site_name" content="{NAME}"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(description)}"><meta property="og:url" content="{e(canonical)}"><meta property="og:image" content="{e(absolute(img))}"><meta property="og:image:alt" content="Изделия ЦЕНТРСПЕЦМЕТАЛЛ"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="{r}modern.css?v={CSS_VERSION}"><link rel="stylesheet" href="{r}bench-catalog.css?v={BENCH_CSS_VERSION}"><link rel="stylesheet" href="{r}lamp-catalog.css?v={LAMP_CSS_VERSION}"><link rel="stylesheet" href="{r}hatch-catalog.css?v={HATCH_CSS_VERSION}"><script src="{r}modern.js?v={JS_VERSION}" defer></script><script type="application/ld+json">{json.dumps({'@context':'https://schema.org','@graph':schema},ensure_ascii=False).replace('</','<\\/')}</script></head>'''
     html=head+f'<body data-root="{r}">'+header(r)+(crumbs(r,breadcrumbs) if breadcrumbs else '')+'<main id="main">'+content+'</main>'+footer(r)+dialog()+'</body></html>\n'
     target=ROOT/path/'index.html' if path else ROOT/'index.html'
     target.parent.mkdir(parents=True,exist_ok=True);target.write_text(html,encoding='utf-8')
@@ -111,7 +114,7 @@ def home():
     r='./'; featured=[next(p for p in PRODUCTS if p['id']==i) for i in ['bowl-classic','bowl-decor','stove','grill-ring','mangal-relief','decor-panels']]
     rail=''.join(f'<a href="{r}{catroute(k)}"><span class="category-icon">{icon(CATEGORIES[k]["icon"])}</span><span><strong>{e(CATEGORIES[k]["name"])}</strong><small>{txt}</small></span></a>' for k,txt in [('fire','Для пространства вокруг огня'),('stoves','Печи и литые элементы'),('decor','Орнаменты и модели'),('industry','По чертежу или образцу')])
     content=f'''<section class="container hero" id="home"><div class="hero-grid"><div class="hero-copy"><div class="eyebrow"><i class="dot"></i>Литейное производство · {e(CONFIG["city"])}</div><h1>Изделия из чугуна<br>и металла.<br><span>Под вашу задачу.</span></h1><p>Костровые чаши, печи, художественный декор и литьё по вашим чертежам. Выберите изделие — обсудим изготовление.</p><div class="hero-actions"><a class="button" href="{r}catalog/">Смотреть каталог <span aria-hidden="true">↗</span></a>{button('Своя идея',style='secondary')}</div><div class="hero-points"><span>По эскизам и образцам</span><span>Чугун, сталь, цветные сплавы</span></div></div><a class="hero-visual" href="{r}products/koltso-stoleshnitsa-s-reshetkoy/"><div class="visual-top"><span>Изделия для вашего пространства</span><span class="round-label">Под заказ</span></div>{image('assets/catalog/grill-ring.webp','Чаша с кольцом-столешницей и решёткой на фигурных опорах',r,priority=True)}<div class="visual-bottom"><div><strong>Огонь собирает своих</strong><small>Чаши и комплектующие для места отдыха</small></div><span class="round-arrow" aria-hidden="true">↗</span></div></a></div></section><div class="container"><nav class="category-rail" aria-label="Направления каталога">{rail}</nav></div><section class="container section" id="catalog"><div class="section-heading"><div><p class="eyebrow">Каталог изделий</p><h2>Вещи с характером.<br>Сделанные из металла.</h2></div><a class="text-link" href="{r}catalog/">Весь каталог · 12 позиций <span aria-hidden="true">↗</span></a></div>{cards(featured,r)}</section><div class="container" id="decor">{directions_home(r)}</div><section class="container section" id="capabilities"><div class="production-grid"><figure class="production-photo">{image('assets/foundry-pour.webp','Заливка металла в форму — фотография из презентации производства',r)}<figcaption>За изделиями — реальные производственные возможности.</figcaption></figure><div class="production-copy"><p class="eyebrow">Производство ЦЕНТРСПЕЦМЕТАЛЛ</p><h2>От вашей идеи<br>до отливки.</h2><p>Промышленные детали, художественные элементы и модельная оснастка. Подбираем сплав, формовку и обработку под конкретное изделие.</p>{service_links(r)}<a class="text-link" href="{r}production/">Узнать о производстве <span aria-hidden="true">↗</span></a></div></div></section><section class="process-section" id="process"><div class="container"><div class="section-heading"><div><p class="eyebrow">Как заказать</p><h2>Начинаем с простого<br>разговора.</h2></div><p>Не обязательно сразу иметь готовый чертёж. Расскажите, что вы хотите получить.</p></div>{process_steps()}</div></section><section class="container section"><div class="faq-grid"><div><p class="eyebrow">Перед заказом</p><h2>Ответы<br>на ваши вопросы.</h2><p>Если задача нестандартная — обсудим детали лично.</p></div>{faq()}</div></section>{contact_banner()}'''
-    content=content.replace('Весь каталог · 12 позиций',f'Весь каталог · {len(PRODUCTS)+len(BENCHES)+len(LAMPS)} позиций').replace('<div class="container" id="decor">',bench_teaser(r)+lamp_teaser(r)+'<div class="container" id="decor">')
+    content=content.replace('Весь каталог · 12 позиций',f'Весь каталог · {len(PRODUCTS)+len(BENCHES)+len(LAMPS)+len(HATCHES)} позиций').replace('<div class="container" id="decor">',bench_teaser(r)+lamp_teaser(r)+hatch_teaser(r)+'<div class="container" id="decor">')
     page('','Литьё и чугунные изделия в Туле — ЦЕНТРСПЕЦМЕТАЛЛ','Литейное производство в Туле: костровые чаши, чугунные печи, декор, проекты скамеек и литьё по чертежам. Каталог изделий и расчёт заказа.',content,extra_schema=[item_list(featured)])
 def process_steps():
     steps=[('Расскажите о задаче','Выберите изделие или пришлите эскиз, фото, чертёж. Укажите количество и город получения.'),('Уточним детали','Согласуем материал, размер, оснастку, покрытие и состав комплекта.'),('Подготовим расчёт','Обсудим стоимость, срок изготовления, оплату и передачу продукции.'),('Выполним заказ','Изготовление и передача изделий — по согласованным условиям и документации.')]
@@ -123,10 +126,10 @@ def catalog_pages():
         text=c['text'] if c else 'Чаши и мангалы, чугунные печи, художественный декор и литьё на заказ. Посмотрите фотографии, выберите пример исполнения и обсудите с нами изготовление.'
         items=[p for p in PRODUCTS if not key or p['category']==key]
         links=f'<a href="{r}catalog/" class="{"active" if not key else ""}">Все изделия</a>'+''.join(f'<a href="{r}{catroute(k)}" class="{"active" if key==k else ""}">{v["name"]}</a>' for k,v in CATEGORIES.items())
-        links+=f'<a href="{r}{BENCH_ROUTE}">Чугунные скамейки</a><a href="{r}{LAMP_ROUTE}">Уличные фонари</a>'
-        count=len(items)+(len(BENCHES)+len(LAMPS) if key is None else 0)
+        links+=f'<a href="{r}{BENCH_ROUTE}">Чугунные скамейки</a><a href="{r}{LAMP_ROUTE}">Уличные фонари</a><a href="{r}{HATCH_ROUTE}">Люки и крышки</a>'
+        count=len(items)+(len(BENCHES)+len(LAMPS)+len(HATCHES) if key is None else 0)
         grid=cards(items,r)
-        if key is None:grid=grid[:-6]+bench_cards(r)+lamp_cards(r)+'</div>'
+        if key is None:grid=grid[:-6]+bench_cards(r)+lamp_cards(r)+hatch_cards(r)+'</div>'
         tools=f'<div class="catalog-tools"><nav class="filter-list" aria-label="Категории каталога">{links}</nav><label class="catalog-search js-only"><span aria-hidden="true">⌕</span><input id="catalog-search" type="search" aria-label="Поиск по каталогу" placeholder="Найти изделие"></label></div><p class="result-count" id="result-count" role="status">{count} позиций</p>'
         content=heading(title,text,'Каталог')+f'<section class="container" style="padding-bottom:65px">{tools}{grid}<div class="empty-state" id="empty-state" hidden><h2>По вашему запросу ничего не найдено</h2><p>Попробуйте другое название или опишите нам свою задачу.</p>{button("Обсудить изготовление")}</div></section>'+contact_banner()
         bc=[('Каталог',None)] if not c else [('Каталог','catalog/'),(c['name'],None)]
@@ -134,6 +137,7 @@ def catalog_pages():
         if key is None:
             listing['itemListElement'] += [{'@type':'ListItem','position':len(items)+i,'name':b['type']+' «'+b['name']+'»','url':absolute('products/'+b['slug']+'/')} for i,b in enumerate(BENCHES,1)]
             listing['itemListElement'] += [{'@type':'ListItem','position':len(items)+len(BENCHES)+i,'name':b['type']+' «'+b['name']+'»','url':absolute('products/'+b['slug']+'/')} for i,b in enumerate(LAMPS,1)]
+            listing['itemListElement'] += [{'@type':'ListItem','position':len(items)+len(BENCHES)+len(LAMPS)+i,'name':b['type']+' «'+b['name']+'»','url':absolute('products/'+b['slug']+'/')} for i,b in enumerate(HATCHES,1)]
         page(path,title+' — ЦЕНТРСПЕЦМЕТАЛЛ',text,content,bc,[{'@type':'CollectionPage','name':title,'url':absolute(path),'mainEntity':listing}])
 def product_pages():
     for p in PRODUCTS:
@@ -172,7 +176,7 @@ def sitemap():
     xml+='\n'.join(f'<url><loc>{e(absolute(path))}</loc><lastmod>{CONFIG["updated"]}</lastmod></url>' for path in PAGES)
     (ROOT/'sitemap.xml').write_text(xml+'\n</urlset>\n',encoding='utf-8')
     (ROOT/'robots.txt').write_text('User-agent: *\nAllow: /\n\nSitemap: '+absolute('sitemap.xml')+'\n',encoding='utf-8')
-    (ROOT/'site-manifest.json').write_text(json.dumps({'canonicalBase':BASE,'pages':PAGES,'productRoutes':{p['id']:route(p) for p in PRODUCTS},'benchProjectRoutes':{b['id']:'products/'+b['slug']+'/' for b in BENCHES},'lampProjectRoutes':{b['id']:'products/'+b['slug']+'/' for b in LAMPS}},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    (ROOT/'site-manifest.json').write_text(json.dumps({'canonicalBase':BASE,'pages':PAGES,'productRoutes':{p['id']:route(p) for p in PRODUCTS},'benchProjectRoutes':{b['id']:'products/'+b['slug']+'/' for b in BENCHES},'lampProjectRoutes':{b['id']:'products/'+b['slug']+'/' for b in LAMPS},'hatchProjectRoutes':{b['id']:'products/'+b['slug']+'/' for b in HATCHES}},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 def not_found():
     # Use absolute canonical links on 404, which may be requested at any nesting depth.
     content='<section class="container not-found"><p class="eyebrow">Страница не найдена</p><h1>404</h1><p>Возможно, адрес изменился. Вернитесь в каталог или расскажите нам, какое изделие вы ищете.</p><a class="button" href="'+absolute('catalog/')+'">Перейти в каталог ↗</a></section>'
@@ -192,7 +196,7 @@ def directions_home(r):
 def direction_pages():
     r='../../'
     for d in DIRECTIONS:
-        if d['slug'] in ('chugunnye-skameyki','ulichnye-fonari'):continue # Dedicated project collections below.
+        if d['slug'] in ('chugunnye-skameyki','ulichnye-fonari','lyuki-i-kryshki'):continue # Dedicated project collections below.
         options=''.join(f'<li>{e(item)}</li>' for item in d['options'])
         requirements=''.join(f'<li>{e(item)}</li>' for item in d['requirements'])
         message='Интересует направление «'+d['name']+'». Хочу обсудить изготовление по своему проекту.'
@@ -235,6 +239,6 @@ def service_pages():
         page(path,service['title']+' — ЦЕНТРСПЕЦМЕТАЛЛ',service['description'],content,[('Производство','production/'),(service['label'],None)],[schema],service['image'])
 
 if __name__=='__main__':
-    prepare_assets();prepare_lamp_assets()
-    home();catalog_pages();product_pages();information_pages();direction_pages();service_pages();build_benches(globals());build_lamps(globals());sitemap();not_found()
-    print(json.dumps({'pages':len(PAGES),'products':len(PRODUCTS),'benchProjects':len(BENCHES),'lampProjects':len(LAMPS),'canonicalBase':BASE,'javascriptRequiredForContent':False},ensure_ascii=False))
+    prepare_assets();prepare_lamp_assets();prepare_hatch_assets()
+    home();catalog_pages();product_pages();information_pages();direction_pages();service_pages();build_benches(globals());build_lamps(globals());build_hatches(globals());sitemap();not_found()
+    print(json.dumps({'pages':len(PAGES),'products':len(PRODUCTS),'benchProjects':len(BENCHES),'lampProjects':len(LAMPS),'hatchProjects':len(HATCHES),'canonicalBase':BASE,'javascriptRequiredForContent':False},ensure_ascii=False))
