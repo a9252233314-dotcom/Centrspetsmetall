@@ -1,0 +1,42 @@
+{
+  "canonicalBase": "https://a9252233314-dotcom.github.io/Centrspetsmetall/",
+  "pages": [
+    "",
+    "catalog/",
+    "catalog/kostrovye-chashi/",
+    "catalog/chugunnye-pechi/",
+    "catalog/dekor-iz-metalla/",
+    "catalog/lityo-na-zakaz/",
+    "catalog/kostrovye-zony/",
+    "products/kostrovaya-chasha/",
+    "products/chasha-na-figurnyh-oporah/",
+    "products/chugunnaya-pech/",
+    "products/litye-detali-i-zagotovki/",
+    "products/koltso-stoleshnitsa-s-reshetkoy/",
+    "products/litaya-podstavka-pod-chashu/",
+    "products/modelnaya-osnastka/",
+    "products/figura-slon/",
+    "products/figura-volk/",
+    "products/dekorativnye-paneli/",
+    "products/mangal-s-relefom/",
+    "products/besedka-s-ochagom/",
+    "production/",
+    "blagoustroystvo/",
+    "delivery/",
+    "contacts/"
+  ],
+  "productRoutes": {
+    "bowl-classic": "products/kostrovaya-chasha/",
+    "bowl-decor": "products/chasha-na-figurnyh-oporah/",
+    "stove": "products/chugunnaya-pech/",
+    "castings": "products/litye-detali-i-zagotovki/",
+    "grill-ring": "products/koltso-stoleshnitsa-s-reshetkoy/",
+    "stand": "products/litaya-podstavka-pod-chashu/",
+    "pattern": "products/modelnaya-osnastka/",
+    "decor-elephant": "products/figura-slon/",
+    "decor-wolf": "products/figura-volk/",
+    "decor-panels": "products/dekorativnye-paneli/",
+    "mangal-relief": "products/mangal-s-relefom/",
+    "gazebo": "products/besedka-s-ochagom/"
+  }
+}

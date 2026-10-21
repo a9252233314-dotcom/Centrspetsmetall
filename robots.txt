@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://a9252233314-dotcom.github.io/Centrspetsmetall/sitemap.xml
