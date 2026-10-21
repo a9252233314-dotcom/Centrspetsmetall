@@ -1,0 +1,17 @@
+{
+  "park": {
+    "geometry_sha256": "45a24569690329444c7343e201078ec426f4c896a07c47dfbcf8d84424effb4d",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "line": {
+    "geometry_sha256": "d58b18c95e502bd47be6411240976f7fc60b4b0b1314278c69b993bc11b44bff",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "ornament": {
+    "geometry_sha256": "9c3b318313c75b605b1327ecaf7846d6ebaf792bb4be9c26d1989bbf216ab524",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  }
+}

@@ -12,9 +12,9 @@ function send(method,params={}){return new Promise((resolve,reject)=>{const n=++
 try{
  await send('Page.enable');
  for(const b of models){
-  const html=`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>${b.code} — ${b.name} — габаритный эскиз</title><style>@page{size:A4 landscape;margin:0}html,body{margin:0;padding:0}img{width:297mm;height:210mm;display:block}</style></head><body><img src="${base}assets/benches/${b.id}-drawing.svg"></body></html>`;
+  const html=`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>${b.code} — ${b.name} — габаритный эскиз и узел</title><style>@page{size:A4 landscape;margin:0}html,body{margin:0;padding:0}img{width:297mm;height:210mm;display:block;break-after:page}img:last-child{break-after:auto}</style></head><body><img src="${base}assets/benches/${b.id}-drawing.svg"><img src="${base}assets/benches/${b.id}-joint.svg"></body></html>`;
   const tree=await send('Page.getFrameTree');await send('Page.setDocumentContent',{frameId:tree.frameTree.frame.id,html});
-  const result=await send('Runtime.evaluate',{expression:'document.images[0].decode()',awaitPromise:true});if(result.exceptionDetails)throw Error('Drawing failed to load');
+  const result=await send('Runtime.evaluate',{expression:'Promise.all([...document.images].map(i=>i.decode()))',awaitPromise:true});if(result.exceptionDetails)throw Error('Drawing failed to load');
   const pdf=await send('Page.printToPDF',{printBackground:true,preferCSSPageSize:true,displayHeaderFooter:false,marginTop:0,marginBottom:0,marginLeft:0,marginRight:0});
   const output=new URL(`../assets/benches/${b.id}-drawing.pdf`,import.meta.url);fs.writeFileSync(output,Buffer.from(pdf.data,'base64'));console.log(b.id+': PDF written');
  }

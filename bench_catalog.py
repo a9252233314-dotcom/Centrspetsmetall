@@ -17,13 +17,27 @@ def e(v): return escape(str(v), quote=True)
 def route(b): return 'products/'+b['slug']+'/'
 def asset(b, suffix): return 'assets/benches/'+b['id']+'-'+suffix
 
-def mesh(b):
-    faces=[]
+def asset_url(b,suffix):
+    path=asset(b,suffix);target=ROOT/path
+    return path+('?v='+hashlib.sha256(target.read_bytes()).hexdigest()[:10] if target.exists() else '')
+
+def hero_asset(b):
+    manifest=ROOT/'assets/benches/render-manifest.json'
+    if manifest.exists():
+        info=json.loads(manifest.read_text(encoding='utf-8')).get(b['id'],{})
+        geom=ROOT/asset(b,'geometry.json')
+        if geom.exists() and (ROOT/asset(b,'render.webp')).exists() and info.get('geometry_sha256')==hashlib.sha256(geom.read_bytes()).hexdigest():return asset_url(b,'render.webp')
+    return asset_url(b,'view.webp')
+
+def mesh(b,length=1800,return_parts=False):
+    faces=[];parts=[];group='seat'
     def prism(profile, x1, x2, material='iron'):
+        part_id=len(parts)
+        parts.append({'id':part_id,'g':group,'x':[x1,x2],'profile':profile,'m':material})
         a=[[x1,y,z] for y,z in profile]; c=[[x2,y,z] for y,z in profile]
-        faces.append({'v':a[::-1], 'm':material}); faces.append({'v':c,'m':material})
+        faces.append({'v':a[::-1], 'm':material,'g':group,'part':part_id}); faces.append({'v':c,'m':material,'g':group,'part':part_id})
         for i in range(len(a)):
-            j=(i+1)%len(a); faces.append({'v':[a[i],a[j],c[j],c[i]],'m':material})
+            j=(i+1)%len(a); faces.append({'v':[a[i],a[j],c[j],c[i]],'m':material,'g':group,'part':part_id})
     def bar(x1,x2,y1,z1,y2,z2,width=30):
         dy=y2-y1; dz=z2-z1; ln=math.hypot(dy,dz)
         py=-dz/ln*width/2; pz=dy/ln*width/2
@@ -34,28 +48,35 @@ def mesh(b):
     # Five 80 mm boards, four 12 mm visual joints, 32 mm visual board depth.
     for i in range(5):
         y=-224+i*92
-        box(-900,900,y,y+80,418,450,'wood')
+        box(-length/2,length/2,y,y+80,418,450,'wood')
     back=b['id']!='line'
     depth=b['depth']; front=-290 if b['id']=='park' else (-300 if back else -240)
     rear=front+depth
-    for x in (-650,650):
+    support_center=length/2-250
+    for x in (-support_center,support_center):
+        group='support-left' if x<0 else 'support-right'
         x1=x-22; x2=x+22
         # Continuous open frame, feet and a rail below the wooden seat.
         box(x1-10,x2+10,front,front+115,0,20,'iron')
         box(x1-10,x2+10,rear-115,rear,0,20,'iron')
-        bar(x1,x2,front+55,22,-170,407,38)
-        bar(x1,x2,rear-55,22,170,407,38)
-        bar(x1,x2,-225,398,225,398,40)
+        bar(x1,x2,front+55,18,-170,407,38)
+        bar(x1,x2,rear-55,18,170,407,38)
+        bar(x1,x2,-270 if back else -225,398,290 if back else 225,398,40)
         def leg_at(z,front_leg):
             start=front+55 if front_leg else rear-55
             end=-170 if front_leg else 170
-            return start+(end-start)*(z-22)/385
+            return start+(end-start)*(z-18)/389
         if back:
             top=b['height']
             # Back support ends at the exact overall depth/height envelope.
-            prism([(170,399),(206,399),(rear,top),(rear-36,top)],x1,x2)
-            bar(x1,x2,-180,413,-180,615,25)
-            bar(x1,x2,-180,615,245,615,32)
+            prism([(240,399),(276,399),(rear,top),(rear-36,top)],x1,x2)
+            # Arm front stays outside the seat boards; its rear passes through
+            # the 545..570 gap between back boards, never through timber.
+            bar(x1,x2,-252,398,-252,615,25)
+            bar(x1,x2,-252,615,170,615,32)
+            bar(x1,x2,170,615,170,556,20)
+            join_y=240+(556-399)*(rear-276)/(top-399)+18
+            bar(x1,x2,170,556,join_y,556,20)
             if b['id']=='ornament':
                 for k in range(40):
                     t=2*math.pi*k/40; u=2*math.pi*(k+1)/40
@@ -74,14 +95,34 @@ def mesh(b):
         else:
             bar(x1,x2,front+70,62,rear-70,62,28)
     if back:
+        group='back'
         for i in range(4):
             z=490+i*80
-            y=207+(z-399)*(rear-206)/(b['height']-399)
-            profile=[(y-35,z),(y-3,z),(y+13,z+55),(y-19,z+55)]
-            prism(profile,-900,900,'wood')
-    # An indicative connecting rail, whose actual section is to be designed.
-    box(-650,650,-18,18,295,323,'iron')
-    return faces
+            slope=(rear-276)/(b['height']-399)
+            y=240+(z-399)*slope
+            profile=[(y-32,z),(y,z),(y+slope*55,z+55),(y-32+slope*55,z+55)]
+            prism(profile,-length/2,length/2,'wood')
+    # The longitudinal tie is under the seat, with real mating end plates.
+    # It meets the inner faces of the cast crossheads, rather than open air.
+    # Hollow rectangular presentation section; production sizing is separate.
+    group='tiebar'
+    end=support_center-28
+    for y1,y2,z1,z2 in [(-20,20,370,372),(-20,20,408,410),(-20,-18,372,408),(18,20,372,408)]:
+        box(-end,end,y1,y2,z1,z2,'iron')
+    for sign in (-1,1):
+        group='plate-left' if sign<0 else 'plate-right'
+        center=sign*support_center
+        x1,x2=sorted([center-sign*28,center-sign*22])
+        box(x1,x2,-55,55,366,414,'iron')
+        # Bolt heads/washers and nuts are shown conventionally at mating faces.
+        # Nominal grade, holes and fit are for the working design, not assigned here.
+        group='fastener-left' if sign<0 else 'fastener-right'
+        for y in (-35,35):
+            for offset1,offset2,radius,sides in [(-38,-30,7.5,6),(-30,-28,9,16),(22,24,9,16),(24,32,7.5,6)]:
+                a,c=sorted([center+sign*offset1,center+sign*offset2])
+                profile=[(y+radius*math.cos(t*2*math.pi/sides),398+radius*math.sin(t*2*math.pi/sides)) for t in range(sides)]
+                prism(profile,a,c,'metal')
+    return parts if return_parts else faces
 
 def project(v,yaw=-.66,pitch=.30):
     x,y,z=v; a=math.cos(yaw);s=math.sin(yaw);p=math.sin(pitch);q=math.cos(pitch)
@@ -130,7 +171,7 @@ def drawing(b,faces):
           '<defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#789283"/></marker></defs>',
           '<text x="55" y="55" font-size="19" font-weight="bold">ЦЕНТРСПЕЦМЕТАЛЛ</text>',
           '<text x="55" y="91" font-size="30" font-weight="bold">'+e(b['type']+' «'+b['name']+'»')+'</text>',
-          '<text x="1345" y="55" text-anchor="end" class="small">'+e(b['code'])+' · РЕД. 01</text>',
+          '<text x="1345" y="55" text-anchor="end" class="small">'+e(b['code'])+' · РЕД. 02</text>',
           '<text x="1345" y="85" text-anchor="end" class="small">ГАБАРИТНЫЙ ЭСКИЗ · ДЛЯ СОГЛАСОВАНИЯ</text>']
     # Orthographic views use exact same coordinates as the presentation mesh.
     views=[('Вид спереди',55,145,780,360,lambda v:(v[0],-v[2],-v[1]),'front'),('Вид сбоку',910,145,400,360,lambda v:(v[1],-v[2],v[0]),'side'),('Вид сверху',55,550,780,270,lambda v:(v[0],v[1],v[2]),'top')]
@@ -157,19 +198,53 @@ def drawing(b,faces):
     svg='<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="990" viewBox="0 0 1400 990"><title>'+e('Габаритный эскиз «'+b['name']+'»')+'</title>'+''.join(body)+'</svg>'
     (ROOT/asset(b,'drawing.svg')).write_text(svg,encoding='utf-8')
 
+def joint_drawing(b):
+    # Enlarged front elevation of the actual mating solids; fastener is conventional.
+    parts=mesh(b,return_parts=True)
+    selected=[]
+    for p in parts:
+        low=min(v[1] for v in p['profile']);high=max(v[1] for v in p['profile'])
+        if p['g'] in ('tiebar','plate-right','fastener-right') or (p['g']=='support-right' and low>=375 and high<=425):selected.append(p)
+        elif p['g']=='seat' and min(v[0] for v in p['profile'])<=0<=max(v[0] for v in p['profile']):selected.append(p)
+    sx=lambda x:120+(x-450)*3.5
+    sy=lambda z:580-(z-350)*3.5
+    body=['<rect width="1400" height="990" fill="white"/>','<style>text{font-family:Arial,sans-serif;fill:#233e32}.small{font-size:18px;fill:#68766e}.label{font-size:22px;font-weight:bold}.leader{fill:none;stroke:#72917b;stroke-width:2}</style>',
+          '<text x="60" y="60" font-size="21" font-weight="bold">ЦЕНТРСПЕЦМЕТАЛЛ</text>',f'<text x="60" y="110" font-size="32" font-weight="bold">Узел 01 · Перемычка под сиденьем · {e(b["name"])}</text>',
+          '<text x="1340" y="60" text-anchor="end" class="small">РЕД. 02 · СХЕМА ДЛЯ СОГЛАСОВАНИЯ</text>',
+          '<text x="60" y="158" class="small">Увеличенный вид спереди. Показана правая сторона; левая собирается зеркально.</text>']
+    def key(p):return 0 if p['g']=='seat' else (1 if p['g']=='tiebar' else 2 if p['g']=='plate-right' else 3 if p['g']=='support-right' else 4)
+    for p in sorted(selected,key=key):
+        x1=max(450,p['x'][0]);x2=min(740,p['x'][1]);z1=min(v[1] for v in p['profile']);z2=max(v[1] for v in p['profile'])
+        if x2<=x1:continue
+        color='#eee1ce' if p['m']=='wood' else '#a4b5a7' if p['g']=='support-right' else '#c9d7cb' if p['g']=='plate-right' else '#6e7f73' if p['g']=='tiebar' else '#87918a'
+        body.append(f'<rect x="{sx(x1):.1f}" y="{sy(z2):.1f}" width="{(x2-x1)*3.5:.1f}" height="{(z2-z1)*3.5:.1f}" fill="{color}" stroke="#344b3d" stroke-width="1.5"/>')
+    body.extend([f'<path d="M{sx(600)} {sy(398)}H{sx(695)}" stroke="#5e7564" stroke-width="1.5" stroke-dasharray="9 5"/>',
+      '<text x="150" y="675" class="label">01 · Продольная перемычка</text>',f'<path class="leader" d="M340 645V530L{sx(570)} {sy(390)}"/>',
+      '<text x="620" y="735" class="label">02 · Торцевая пластина</text>',f'<path class="leader" d="M740 705V600L{sx(625)} {sy(380)}"/>',
+      '<text x="1040" y="575" class="label">03 · Литая боковина</text>',f'<path class="leader" d="M1040 548H960L{sx(655)} {sy(390)}"/>',
+      '<text x="60" y="245" class="label">Деревянный настил</text>',f'<path class="leader" d="M300 250L{sx(535)} {sy(440)}"/>',
+      '<text x="1020" y="305" class="label">Крепёж</text>',f'<path class="leader" d="M1020 325H980L{sx(678)} {sy(398)}"/>',
+      '<text x="60" y="805" class="small">Перемычка заканчивается у пластины. Пластина прилегает к внутренней грани верхней части боковины.</text>',
+      '<text x="60" y="842" class="small">Болты, шайбы и гайки показаны условно. Отверстия, посадки, сечения и крепёж назначаются в рабочем проекте.</text>',
+      '<path d="M60 885H1340" stroke="#cbd6ce"/>','<text x="60" y="925" class="small">Геометрическая сборочная схема для согласования. Расчёт прочности и литейная документация не выполнены.</text>',
+      '<text x="60" y="960" class="small">Тула · ЦЕНТРСПЕЦМЕТАЛЛ · csm-factory@bk.ru</text>'])
+    (ROOT/asset(b,'joint.svg')).write_text('<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="990" viewBox="0 0 1400 990"><title>Узел крепления перемычки</title>'+''.join(body)+'</svg>',encoding='utf-8')
+
 def prepare_assets():
     (ROOT/'assets/benches').mkdir(exist_ok=True)
     for b in BENCHES:
         faces=mesh(b);render(b,faces)
         # Show one whole side support without boards; the supply option is a pair.
-        support=[f for f in faces if f['m']=='iron' and all(v[0]>600 for v in f['v'])]
-        support=[{'v':[[v[0]-650,v[1],v[2]] for v in f['v']],'m':f['m']} for f in support]
-        render(b,support,'support');drawing(b,faces)
+        support=[f for f in faces if f['g']=='support-right']
+        support=[{**f,'v':[[v[0]-650,v[1],v[2]] for v in f['v']]} for f in support]
+        render(b,support,'support');drawing(b,faces);joint_drawing(b)
         (ROOT/asset(b,'geometry.json')).write_text(json.dumps({'id':b['id'],'length':b['length'],'faces':faces},separators=(',',':')),encoding='utf-8')
+        if 'render.webp' in hero_asset(b):
+            with Image.open(ROOT/asset(b,'render.webp')) as im:im.convert('RGB').save(ROOT/asset(b,'social.jpg'),quality=92)
 
 def bench_card(b,r):
     title=b['type']+' «'+b['name']+'»'
-    return f'''<article class="product-card bench-card" data-product-id="bench-{b['id']}" data-search="{e((title+' чугунная опоры скамейки '+b['description']).lower())}"><a class="product-media" href="{r}{route(b)}"><img src="{r}{asset(b,'view.webp')}" width="1200" height="900" loading="lazy" decoding="async" alt="{e(title)} — проектная визуализация"><span class="product-status model">Проектная модель</span></a><div class="product-body"><p class="product-category">{e(b['code'])} · Чугун и дерево</p><h3><a href="{r}{route(b)}">{e(title)}</a></h3><p>{e(b['audience'])}</p><p class="bench-card-size">Эскиз: {b['length']} × {b['depth']} × {b['height']} мм</p><div class="card-foot"><span>Расчёт после согласования</span><a href="{r}{route(b)}">Модель и эскиз ↗</a></div></div></article>'''
+    return f'''<article class="product-card bench-card" data-product-id="bench-{b['id']}" data-search="{e((title+' чугунная опоры скамейки '+b['description']).lower())}"><a class="product-media" href="{r}{route(b)}"><img src="{r}{hero_asset(b)}" width="1200" height="900" loading="lazy" decoding="async" alt="{e(title)} — проектная визуализация"><span class="product-status model">Проектная модель</span></a><div class="product-body"><p class="product-category">{e(b['code'])} · Чугун и дерево</p><h3><a href="{r}{route(b)}">{e(title)}</a></h3><p>{e(b['audience'])}</p><p class="bench-card-size">Эскиз: {b['length']} × {b['depth']} × {b['height']} мм</p><div class="card-foot"><span>Расчёт после согласования</span><a href="{r}{route(b)}">Модель и эскиз ↗</a></div></div></article>'''
 
 def bench_cards(r):return ''.join(bench_card(b,r) for b in BENCHES)
 
@@ -179,7 +254,7 @@ def teaser(r):
 def build_benches(api):
     page=api['page'];button=api['button'];faq=api['faq'];banner=api['contact_banner'];absolute=api['absolute']
     r='../../'
-    catalog=f'''<section class="container bench-collection-hero"><div><p class="eyebrow"><i class="dot"></i>Чугун и дерево · Проектная коллекция</p><h1>Скамейки,<br>которые начинаются<br>с вашего пространства.</h1><p>Три собственных эскиза для сада, двора и прогулочной зоны. Сравните силуэты, посмотрите размеры и выберите основу будущего изделия.</p><a class="button" href="#models">Выбрать модель <span aria-hidden="true">↓</span></a></div><a class="bench-collection-art" href="{r}{route(BENCHES[0])}"><img src="{r}{asset(BENCHES[0],'view.svg')}" width="1200" height="900" fetchpriority="high" alt="Проект скамейки Парк с чугунными боковинами"><span>ЦСМ СК-01 · Парк <span aria-hidden="true">↗</span></span></a></section><section class="container section" id="models"><div class="section-heading"><div><p class="eyebrow">Три характера</p><h2>Выберите свою скамейку.</h2></div><p>Общий вид, габаритный эскиз<br>и отдельная литая опора.</p></div><div class="product-grid bench-grid">{bench_cards(r)}</div><p class="bench-disclosure">{DISCLOSURE}</p></section><section class="bench-supply-band"><div class="container text-columns"><div><p class="eyebrow">Для мастерских и партнёров</p><h2>Скамейка целиком.<br>Или пара литых опор.</h2><p>Обсудим комплектацию под ваш проект: с деревянным настилом либо только боковины для собственной сборки. Состав поставки, дерево, покрытие и крепёж определяются при расчёте.</p>{button('Рассчитать комплект опор','custom',extra='data-message="Интересуют чугунные опоры для скамеек. Модель: ____. Количество комплектов: ____. Город: ____."')}</div><div><h2>От эскиза к заказу</h2><ol><li>Выбираем модель, габариты и количество.</li><li>Проверяем конструкцию и технологию с литейкой.</li><li>Согласуем оснастку, материалы, комплектацию и стоимость.</li><li>Подготавливаем документацию и условия изготовления.</li></ol><p class="bench-disclosure">Коллекция находится на стадии эскизов. Возможность изготовления и сроки подтверждаются производством по конкретному заказу.</p></div></div></section><section class="container section article-copy"><h2>Чугунные скамейки и литые боковины в Туле</h2><p>ЦЕНТРСПЕЦМЕТАЛЛ развивает направление садовых и парковых скамеек с литыми опорами. В коллекции представлены эскизы со спинкой и без спинки, с подлокотниками и декоративным рисунком боковин. В основе предложения — возможности литейного производства в Туле и разработка изделия под конкретную задачу.</p><p>Для запроса расчёта укажите модель, желаемые размеры, количество и город получения. Если нужен свой рисунок боковины, приложите эскиз или описание. Отдельно обсудим поставку чугунных опор для столярных мастерских и производителей уличной мебели.</p></section>'''+banner()
+    catalog=f'''<section class="container bench-collection-hero"><div><p class="eyebrow"><i class="dot"></i>Чугун и дерево · Проектная коллекция</p><h1>Скамейки,<br>которые начинаются<br>с вашего пространства.</h1><p>Три собственных эскиза для сада, двора и прогулочной зоны. Сравните силуэты, посмотрите размеры и выберите основу будущего изделия.</p><a class="button" href="#models">Выбрать модель <span aria-hidden="true">↓</span></a></div><a class="bench-collection-art" href="{r}{route(BENCHES[0])}"><img src="{r}{hero_asset(BENCHES[0])}" width="1200" height="900" fetchpriority="high" alt="Проект скамейки Парк с чугунными боковинами"><span>ЦСМ СК-01 · Парк <span aria-hidden="true">↗</span></span></a></section><section class="container section" id="models"><div class="section-heading"><div><p class="eyebrow">Три характера</p><h2>Выберите свою скамейку.</h2></div><p>Общий вид, габаритный эскиз<br>и отдельная литая опора.</p></div><div class="product-grid bench-grid">{bench_cards(r)}</div><p class="bench-disclosure">{DISCLOSURE}</p></section><section class="bench-supply-band"><div class="container text-columns"><div><p class="eyebrow">Для мастерских и партнёров</p><h2>Скамейка целиком.<br>Или пара литых опор.</h2><p>Обсудим комплектацию под ваш проект: с деревянным настилом либо только боковины для собственной сборки. Состав поставки, дерево, покрытие и крепёж определяются при расчёте.</p>{button('Рассчитать комплект опор','custom',extra='data-message="Интересуют чугунные опоры для скамеек. Модель: ____. Количество комплектов: ____. Город: ____."')}</div><div><h2>От эскиза к заказу</h2><ol><li>Выбираем модель, габариты и количество.</li><li>Проверяем конструкцию и технологию с литейкой.</li><li>Согласуем оснастку, материалы, комплектацию и стоимость.</li><li>Подготавливаем документацию и условия изготовления.</li></ol><p class="bench-disclosure">Коллекция находится на стадии эскизов. Возможность изготовления и сроки подтверждаются производством по конкретному заказу.</p></div></div></section><section class="container section article-copy"><h2>Чугунные скамейки и литые боковины в Туле</h2><p>ЦЕНТРСПЕЦМЕТАЛЛ развивает направление садовых и парковых скамеек с литыми опорами. В коллекции представлены эскизы со спинкой и без спинки, с подлокотниками и декоративным рисунком боковин. В основе предложения — возможности литейного производства в Туле и разработка изделия под конкретную задачу.</p><p>Для запроса расчёта укажите модель, желаемые размеры, количество и город получения. Если нужен свой рисунок боковины, приложите эскиз или описание. Отдельно обсудим поставку чугунных опор для столярных мастерских и производителей уличной мебели.</p></section>'''+banner()
     collection={'@type':'CollectionPage','name':'Чугунные скамейки — проектная коллекция','url':absolute(BENCH_ROUTE),'mainEntity':{'@type':'ItemList','itemListElement':[{'@type':'ListItem','position':i,'name':b['type']+' «'+b['name']+'»','url':absolute(route(b))} for i,b in enumerate(BENCHES,1)]}}
     page(BENCH_ROUTE,'Чугунные скамейки и опоры в Туле — проекты | ЦЕНТРСПЕЦМЕТАЛЛ','Проекты чугунных скамеек: три модели, визуализации, габаритные эскизы и варианты поставки литых опор. Обсуждение изготовления в Туле.',catalog,[('Каталог','catalog/'),('Чугунные скамейки',None)],[collection],asset(BENCHES[0],'social.jpg'))
     for b in BENCHES:
@@ -190,7 +265,9 @@ def build_benches(api):
         specs=''.join(f'<div><dt>{k}</dt><dd>{e(v)}</dd></div>' for k,v in [('Артикул проекта',b['code']),('Габариты эскиза',f'{b["length"]} × {b["depth"]} × {b["height"]} мм'),('Высота сиденья',str(b['seatHeight'])+' мм'),('Предлагаемые материалы','Чугунные опоры, деревянный настил'),('Статус','Эскизная разработка')])
         related=''.join(bench_card(o,r) for o in BENCHES if o['id']!=b['id'])
         questions=[('Можно заказать только чугунные опоры?','Да, можно направить запрос на пару боковин или партию опор для собственной сборки. Состав комплекта, соединения, оснастку и стоимость согласуем с производством.'),('Можно изменить размеры и рисунок?','Укажите желаемую длину, посадку, рисунок боковины и место установки. Изменения проверяются при разработке конструкции и подготовке модели для литья.'),('Это фотография готовой скамейки?','На странице показаны проектная визуализация и габаритный эскиз. Изготовление образца, рабочая документация и сроки обсуждаются после согласования конструкции.')]
-        content=f'''<section class="container bench-product" data-bench="{b['id']}"><div class="bench-main"><div class="bench-viewer" id="bench-viewer" data-geometry="{r}{asset(b,'geometry.json')}" data-support="{r}{asset(b,'support.svg')}"><img id="bench-fallback" src="{r}{asset(b,'view.svg')}" width="1200" height="900" fetchpriority="high" alt="{e(title)} — проектная визуализация"><svg id="bench-canvas" viewBox="0 0 1200 900" aria-label="Вращаемая проектная модель скамейки" role="img" hidden></svg><span class="bench-view-tag">Проектная визуализация</span><span class="bench-view-help js-only">Потяните, чтобы повернуть</span></div><div class="bench-view-buttons js-only" role="group" aria-label="Ракурс модели"><button type="button" data-bench-view="perspective" aria-pressed="true">Общий вид</button><button type="button" data-bench-view="front" aria-pressed="false">Спереди</button><button type="button" data-bench-view="side" aria-pressed="false">Сбоку</button><button type="button" data-bench-view="support" aria-pressed="false">Опора</button></div><p class="bench-disclosure">{DISCLOSURE}</p></div><div class="bench-summary"><p class="eyebrow">{e(b['code'])} · Проектная коллекция</p><h1>{e(b['type'])}<br>«{e(b['name'])}»</h1><p>{e(b['description'])}</p><ul class="bench-highlights">{options}</ul><div class="bench-config js-only"><div class="bench-option"><span>Длина эскиза</span><div class="bench-lengths" role="group" aria-label="Желаемая длина"><button type="button" data-bench-length="1500" aria-pressed="false">1,5 м</button><button type="button" data-bench-length="1800" aria-pressed="true">1,8 м</button><button type="button" data-bench-length="2000" aria-pressed="false">2 м</button></div></div><div class="bench-option"><span>Цвет литья на экране</span><div class="bench-swatches" role="group" aria-label="Визуальный цвет литья"><button type="button" data-bench-color="#33453d" style="--swatch:#33453d" aria-label="Лесной зелёный" aria-pressed="true"></button><button type="button" data-bench-color="#313437" style="--swatch:#313437" aria-label="Графитовый" aria-pressed="false"></button><button type="button" data-bench-color="#776951" style="--swatch:#776951" aria-label="Тёплый бронзовый" aria-pressed="false"></button></div></div><label class="bench-option"><span>Запросить расчёт</span><select id="bench-supply"><option value="Скамейка с настилом">Скамейка с настилом</option><option value="Пара чугунных опор">Пара чугунных опор</option></select></label><p>Варианты помогают сформировать запрос. Итоговое исполнение согласуется.</p></div><div class="bench-order"><span>Стоимость после согласования</span>{request}</div><p class="bench-current" id="bench-current" aria-live="polite">Эскиз: 1800 мм · Скамейка с настилом</p></div></section><section class="container section bench-details"><div class="section-heading"><div><p class="eyebrow">Замысел модели</p><h2>Характер — в деталях.</h2></div></div><div class="text-columns"><div class="article-copy"><p>{e(b['detail'])}</p><h3>Что согласуем с вами</h3><p>Размеры, рисунок литья, древесину, окраску и состав поставки. Для длинных исполнений отдельно проверяется необходимость дополнительных опор. Крепления к основанию выбираются под место установки.</p></div><dl class="features bench-specs">{specs}</dl></div></section><section class="bench-drawing-band" id="drawing"><div class="container"><div class="section-heading"><div><p class="eyebrow">Для выбора и обсуждения</p><h2>Габаритный эскиз</h2></div><div class="bench-downloads"><a class="button secondary" href="{r}{asset(b,'drawing.svg')}" download>Скачать SVG ↓</a><a class="button" href="{r}{asset(b,'drawing.pdf')}" download>Скачать PDF ↓</a></div></div><a class="bench-drawing" href="{r}{asset(b,'drawing.svg')}" target="_blank" rel="noopener" aria-label="Открыть габаритный эскиз крупно"><img src="{r}{asset(b,'drawing.svg')}" width="1400" height="990" loading="lazy" alt="{e(title)}: виды спереди, сбоку и сверху с предварительными размерами"></a><p class="bench-disclosure">Размеры относятся к базовому эскизу 1800 мм. Это материал для согласования внешнего вида; рабочая документация подготавливается после проверки конструкции производством.</p></div></section><section class="container section bench-support-block"><figure><img src="{r}{asset(b,'support.svg')}" width="1200" height="900" loading="lazy" alt="Проект отдельной чугунной боковины модели {e(b['name'])}"><figcaption>Визуализация одной опоры. Запрос поставки — пара или партия.</figcaption></figure><div><p class="eyebrow">Для собственной сборки</p><h2>Литая опора<br>как отдельное изделие.</h2><p>Столярной мастерской или производителю мебели можно обсудить только чугунные боковины. Деревянный настил и сборку вы выполняете под свой проект.</p><p>Укажите количество пар, размеры настила и пожелания к покрытию. Геометрию соединений, комплект крепежа и необходимость оснастки определяем при расчёте.</p>{button('Запросить пару опор','custom',extra='data-message="'+e('Интересует пара чугунных опор для модели «'+b['name']+'» ('+b['code']+'). Количество пар: ____. Город: ____.')+'"')}</div></section><section class="container section"><div class="faq-grid"><div><p class="eyebrow">Перед расчётом</p><h2>Обсудим исполнение.</h2></div>{faq(questions)}</div></section><section class="container section"><div class="section-heading"><h2>Другой характер</h2><a class="text-link" href="{r}{BENCH_ROUTE}">Все скамейки ↗</a></div><div class="product-grid bench-related">{related}</div></section>'''+banner()
+        content=f'''<section class="container bench-product" data-bench="{b['id']}"><div class="bench-main"><div class="bench-viewer" id="bench-viewer" data-geometry="{r}{asset_url(b,'geometry.json')}" data-support="{r}{asset_url(b,'support.svg')}" data-render="{r}{hero_asset(b)}" data-joint="{r}{asset_url(b,'joint.svg')}"><img id="bench-fallback" src="{r}{hero_asset(b)}" width="1200" height="900" fetchpriority="high" alt="{e(title)} — проектная визуализация"><canvas id="bench-gl" width="1200" height="900" aria-label="Интерактивная 3D-модель скамейки" hidden></canvas><svg id="bench-canvas" viewBox="0 0 1200 900" aria-label="Вращаемая проектная модель скамейки" role="img" hidden></svg><span class="bench-view-tag">Проектная визуализация</span><span class="bench-view-help js-only">Потяните, чтобы повернуть</span></div><div class="bench-view-buttons js-only" role="group" aria-label="Ракурс модели"><button type="button" data-bench-view="render" aria-pressed="true">Рендер 1,8 м</button><button type="button" data-bench-view="perspective" aria-pressed="false">3D</button><button type="button" data-bench-view="joint" aria-pressed="false">Узел</button><button type="button" data-bench-view="front" aria-pressed="false">Спереди</button><button type="button" data-bench-view="side" aria-pressed="false">Сбоку</button><button type="button" data-bench-view="support" aria-pressed="false">Опора</button></div><p class="bench-disclosure">{DISCLOSURE}</p></div><div class="bench-summary"><p class="eyebrow">{e(b['code'])} · Проектная коллекция</p><h1>{e(b['type'])}<br>«{e(b['name'])}»</h1><p>{e(b['description'])}</p><ul class="bench-highlights">{options}</ul><div class="bench-config js-only"><div class="bench-option"><span>Длина эскиза</span><div class="bench-lengths" role="group" aria-label="Желаемая длина"><button type="button" data-bench-length="1500" aria-pressed="false">1,5 м</button><button type="button" data-bench-length="1800" aria-pressed="true">1,8 м</button><button type="button" data-bench-length="2000" aria-pressed="false">2 м</button></div></div><div class="bench-option"><span>Цвет литья на экране</span><div class="bench-swatches" role="group" aria-label="Визуальный цвет литья"><button type="button" data-bench-color="#33453d" style="--swatch:#33453d" aria-label="Лесной зелёный" aria-pressed="true"></button><button type="button" data-bench-color="#313437" style="--swatch:#313437" aria-label="Графитовый" aria-pressed="false"></button><button type="button" data-bench-color="#776951" style="--swatch:#776951" aria-label="Тёплый бронзовый" aria-pressed="false"></button></div></div><label class="bench-option"><span>Запросить расчёт</span><select id="bench-supply"><option value="Скамейка с настилом">Скамейка с настилом</option><option value="Пара чугунных опор">Пара чугунных опор</option></select></label><p>Варианты помогают сформировать запрос. Итоговое исполнение согласуется.</p></div><div class="bench-order"><span>Стоимость после согласования</span>{request}</div><p class="bench-current" id="bench-current" aria-live="polite">Эскиз: 1800 мм · Скамейка с настилом</p></div></section><section class="container section bench-details"><div class="section-heading"><div><p class="eyebrow">Замысел модели</p><h2>Характер — в деталях.</h2></div></div><div class="text-columns"><div class="article-copy"><p>{e(b['detail'])}</p><h3>Что согласуем с вами</h3><p>Размеры, рисунок литья, древесину, окраску и состав поставки. Для длинных исполнений отдельно проверяется необходимость дополнительных опор. Крепления к основанию выбираются под место установки.</p></div><dl class="features bench-specs">{specs}</dl></div></section><section class="bench-drawing-band" id="drawing"><div class="container"><div class="section-heading"><div><p class="eyebrow">Для выбора и обсуждения</p><h2>Габаритный эскиз</h2></div><div class="bench-downloads"><a class="button secondary" href="{r}{asset_url(b,'drawing.svg')}" download>Скачать SVG ↓</a><a class="button" href="{r}{asset_url(b,'drawing.pdf')}" download>Скачать PDF ↓</a></div></div><a class="bench-drawing" href="{r}{asset_url(b,'drawing.svg')}" target="_blank" rel="noopener" aria-label="Открыть габаритный эскиз крупно"><img src="{r}{asset_url(b,'drawing.svg')}" width="1400" height="990" loading="lazy" alt="{e(title)}: виды спереди, сбоку и сверху с предварительными размерами"></a><p class="bench-disclosure">Размеры относятся к базовому эскизу 1800 мм. Это материал для согласования внешнего вида; рабочая документация подготавливается после проверки конструкции производством.</p></div></section><section class="container section bench-joint-section"><div class="section-heading"><div><p class="eyebrow">Узел 01</p><h2>Как закреплена перемычка</h2></div><a class="text-link" href="{r}{asset_url(b,'joint.svg')}" target="_blank" rel="noopener">Открыть схему ↗</a></div><a class="bench-drawing" href="{r}{asset_url(b,'joint.svg')}" target="_blank" rel="noopener"><img src="{r}{asset_url(b,'joint.svg')}" width="1400" height="990" loading="lazy" alt="Перемычка через торцевую пластину прикреплена к литой боковине"></a><p class="bench-disclosure">Перемычка находится под настилом. На каждом конце — торцевая пластина, прилегающая к боковине. Крепёж на схеме условный; его подбор и рабочие размеры требуют расчёта.</p></section><section class="container section bench-support-block"><figure><img src="{r}{asset_url(b,'support.svg')}" width="1200" height="900" loading="lazy" alt="Проект отдельной чугунной боковины модели {e(b['name'])}"><figcaption>Визуализация одной опоры. Запрос поставки — пара или партия.</figcaption></figure><div><p class="eyebrow">Для собственной сборки</p><h2>Литая опора<br>как отдельное изделие.</h2><p>Столярной мастерской или производителю мебели можно обсудить только чугунные боковины. Деревянный настил и сборку вы выполняете под свой проект.</p><p>Укажите количество пар, размеры настила и пожелания к покрытию. Геометрию соединений, комплект крепежа и необходимость оснастки определяем при расчёте.</p>{button('Запросить пару опор','custom',extra='data-message="'+e('Интересует пара чугунных опор для модели «'+b['name']+'» ('+b['code']+'). Количество пар: ____. Город: ____.')+'"')}</div></section><section class="container section"><div class="faq-grid"><div><p class="eyebrow">Перед расчётом</p><h2>Обсудим исполнение.</h2></div>{faq(questions)}</div></section><section class="container section"><div class="section-heading"><h2>Другой характер</h2><a class="text-link" href="{r}{BENCH_ROUTE}">Все скамейки ↗</a></div><div class="product-grid bench-related">{related}</div></section>'''+banner()
+        gl_version=hashlib.sha256((ROOT/'bench-webgl.js').read_bytes()).hexdigest()[:10]
+        content+=f'<script src="{r}bench-webgl.js?v={gl_version}" defer></script>'
         viewer_version=hashlib.sha256((ROOT/'bench-viewer.js').read_bytes()).hexdigest()[:10]
         content+=f'<script src="{r}bench-viewer.js?v={viewer_version}" defer></script>'
         entity={'@type':'CreativeWork','name':title+' — проект','description':b['description'],'url':absolute(route(b)),'image':absolute(asset(b,'social.jpg')),'creator':{'@id':absolute('#organization')},'creativeWorkStatus':'Эскизная разработка'}
