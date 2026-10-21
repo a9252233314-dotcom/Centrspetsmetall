@@ -23,7 +23,12 @@
     "production/",
     "blagoustroystvo/",
     "delivery/",
-    "contacts/"
+    "contacts/",
+    "blagoustroystvo/ulichnye-fonari/",
+    "blagoustroystvo/chugunnye-skameyki/",
+    "blagoustroystvo/lyuki-i-kryshki/",
+    "blagoustroystvo/besedki-i-kostrovye-zony/",
+    "blagoustroystvo/chugunnaya-plitka/"
   ],
   "productRoutes": {
     "bowl-classic": "products/kostrovaya-chasha/",
