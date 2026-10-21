@@ -28,7 +28,10 @@
     "blagoustroystvo/chugunnye-skameyki/",
     "blagoustroystvo/lyuki-i-kryshki/",
     "blagoustroystvo/besedki-i-kostrovye-zony/",
-    "blagoustroystvo/chugunnaya-plitka/"
+    "blagoustroystvo/chugunnaya-plitka/",
+    "production/lityo-na-zakaz/",
+    "production/modelnaya-osnastka-i-formovka/",
+    "production/obrabotka-i-pokrytie/"
   ],
   "productRoutes": {
     "bowl-classic": "products/kostrovaya-chasha/",
