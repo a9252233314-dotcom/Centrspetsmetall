@@ -10,7 +10,10 @@
       "assets/bowl-simple.webp",
       "assets/bowl-simple-side.webp",
       "assets/blanks-bowl.webp",
-      "assets/bowl-grill-workshop.webp"
+      "assets/bowl-grill-workshop.webp",
+      "assets/bowl-straight-stand.webp",
+      "assets/bowl-workshop-detail.webp",
+      "assets/bowl-dark-workshop.webp"
     ],
     "tag": "Под заказ",
     "description": "Чугунная чаша для обустройства места отдыха на участке. Исполнение чаши и опоры подбираем под задачу заказчика.",
@@ -44,7 +47,9 @@
     "gallery": [
       "assets/bowl-decor.webp",
       "assets/bowl-decor-side.webp",
-      "assets/bowl-decor-top.webp"
+      "assets/bowl-decor-top.webp",
+      "assets/bowl-ornate-workshop.webp",
+      "assets/bowl-ornate-close.webp"
     ],
     "tag": "Под заказ",
     "description": "Костровая чаша с декоративными литыми опорами. Обсуждаем внешний вид, размер и состав комплекта под вашу площадку.",
@@ -136,6 +141,42 @@
     "note": "Предельная масса зависит от материала и технологии. Возможность изготовления конкретной детали подтверждается после рассмотрения документации."
   },
   {
+    "id": "grill-ring",
+    "category": "fire",
+    "categoryLabel": "Комплектующие для костровых чаш",
+    "name": "Кольцо-столешница с решёткой",
+    "subtitle": "Дополнение к чаше для пространства вокруг огня.",
+    "image": "assets/bowl-grill-ring.webp",
+    "imageAlt": "Пример чаши на фигурных опорах с кольцом-столешницей и центральной решёткой в мастерской",
+    "gallery": [
+      "assets/bowl-grill-ring.webp",
+      "assets/bowl-grill-ring-top.webp",
+      "assets/bowl-ring-workshop.webp",
+      "assets/bowl-grates-workshop.webp"
+    ],
+    "tag": "По согласованию",
+    "description": "Кольцо-столешница вокруг очага и центральная решётка как дополнение к костровой чаше. В галерее показаны собранный пример и отдельные элементы. Диаметр, посадку на чашу, рисунок решётки и состав поставки согласуем под ваш заказ.",
+    "features": [
+      [
+        "Состав",
+        "Кольцо и решётка — по согласованной комплектации"
+      ],
+      [
+        "Размер и крепления",
+        "Под конкретную чашу"
+      ],
+      [
+        "Материал и покрытие",
+        "Согласуются под назначение изделия"
+      ],
+      [
+        "Стоимость",
+        "После уточнения исполнения"
+      ]
+    ],
+    "note": "На фото — примеры исполнения. Чаша и опоры не входят в комплект автоматически. Возможность применения для приготовления пищи, материал, покрытие и условия эксплуатации подтверждаются для выбранного исполнения; складское наличие не заявлено."
+  },
+  {
     "id": "stand",
     "category": "fire",
     "categoryLabel": "Костровые чаши",
@@ -144,7 +185,9 @@
     "image": "assets/bowl-stand.webp",
     "gallery": [
       "assets/bowl-stand.webp",
-      "assets/blanks-bowl.webp"
+      "assets/blanks-bowl.webp",
+      "assets/cast-ornate-supports.webp",
+      "assets/cast-support-detail.webp"
     ],
     "tag": "Под заказ",
     "description": "Литые опорные элементы для костровой чаши. Геометрию опоры, количество деталей и совместимость с чашей согласуем при подготовке заказа.",
