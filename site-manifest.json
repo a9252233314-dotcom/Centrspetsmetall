@@ -24,7 +24,6 @@
     "blagoustroystvo/",
     "delivery/",
     "contacts/",
-    "blagoustroystvo/ulichnye-fonari/",
     "blagoustroystvo/lyuki-i-kryshki/",
     "blagoustroystvo/besedki-i-kostrovye-zony/",
     "blagoustroystvo/chugunnaya-plitka/",
@@ -37,7 +36,11 @@
     "products/skameyka-uzor/",
     "products/skamya-duga/",
     "products/skameyka-potok/",
-    "products/parametricheskaya-skamya-ritm/"
+    "products/parametricheskaya-skamya-ritm/",
+    "blagoustroystvo/ulichnye-fonari/",
+    "products/ulichnyy-fonar-gran/",
+    "products/parkovyy-fonar-svod/",
+    "products/parametricheskiy-fonar-oreol/"
   ],
   "productRoutes": {
     "bowl-classic": "products/kostrovaya-chasha/",
@@ -60,5 +63,10 @@
     "arc": "products/skamya-duga/",
     "flow": "products/skameyka-potok/",
     "rhythm": "products/parametricheskaya-skamya-ritm/"
+  },
+  "lampProjectRoutes": {
+    "facet": "products/ulichnyy-fonar-gran/",
+    "vault": "products/parkovyy-fonar-svod/",
+    "halo": "products/parametricheskiy-fonar-oreol/"
   }
 }

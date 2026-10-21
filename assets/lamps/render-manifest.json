@@ -1,0 +1,17 @@
+{
+  "facet": {
+    "geometry_sha256": "2422bea2b3262cd342db4b9d7c5b0dea694482d4177cd63a09731ef4c367b61e",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "vault": {
+    "geometry_sha256": "f77d2e91d2a24f6729485c6b6f30a08c82c4e02ba3520f8ada9f306bf4183a78",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "halo": {
+    "geometry_sha256": "0d09e0fd93a33fd00d79a6db63001268f6d081af96edec7567e79aba31a3a597",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  }
+}
