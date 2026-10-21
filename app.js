@@ -15,11 +15,11 @@ function renderProducts(filter='all'){
   visible.forEach(product=>{
     const card=make('article','product-card');card.dataset.id=product.id;
     const imageButton=make('button','product-image-button');imageButton.type='button';imageButton.setAttribute('aria-label','Открыть: '+product.name);imageButton.addEventListener('click',()=>showProduct(product.id));
-    const image=make('img');image.src=product.image;image.alt=product.name;image.loading='lazy';image.width=650;image.height=480;
+    const image=make('img');image.src=product.image;image.alt=product.imageAlt||product.name;image.loading='lazy';image.width=650;image.height=480;
     imageButton.append(image,make('span','card-tag',product.tag));
     const body=make('div','product-card-body'),title=make('h3'),titleButton=make('button','',product.name);titleButton.type='button';titleButton.addEventListener('click',()=>showProduct(product.id));title.append(titleButton);
     const bottom=make('div','card-bottom'),details=make('button','','Подробнее ↗');details.type='button';details.addEventListener('click',()=>showProduct(product.id));bottom.append(make('span','',product.category==='projects'?'Обсудить проект':'Расчёт по запросу'),details);
-    body.append(make('p','category',product.categoryLabel),title,make('p','',product.subtitle),bottom);card.append(imageButton,body);grid.append(card);
+    body.append(make('p','category',product.categoryLabel),title,make('p','',product.subtitle),bottom);card.append(imageButton);if(product.imageCaption)card.append(make('p','product-image-caption',product.imageCaption));card.append(body);grid.append(card);
   });
   $('product-count').textContent=visible.length+' / '+products.length+' ПОЗИЦИЙ';
 }
@@ -27,7 +27,8 @@ function showProduct(id){
   const product=products.find(item=>item.id===id);if(!product)return;
   activeProduct=product;
   $('product-title').textContent=product.name;$('product-category').textContent=product.categoryLabel.toUpperCase();$('product-status').textContent=product.tag;$('product-description').textContent=product.description;$('product-note').textContent=product.note;
-  $('product-main-image').src=product.image;$('product-main-image').alt=product.name;
+  $('product-main-image').src=product.image;$('product-main-image').alt=product.imageAlt||product.name;
+  $('product-image-caption').textContent=product.imageCaption||'';$('product-image-caption').hidden=!product.imageCaption;
   const thumbnails=$('product-thumbnails');thumbnails.replaceChildren();
   product.gallery.forEach((src,i)=>{const button=make('button',i===0?'active':'');button.type='button';button.setAttribute('aria-label','Фото '+(i+1));const img=make('img');img.src=src;img.alt='';button.append(img);button.addEventListener('click',()=>{$('product-main-image').src=src;thumbnails.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button))});thumbnails.append(button)});
   $('product-features').replaceChildren();product.features.forEach(([label,value])=>{const row=make('div');row.append(make('dt','',label),make('dd','',value));$('product-features').append(row)});
