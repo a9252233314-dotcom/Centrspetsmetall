@@ -1,5 +1,9 @@
 {
   "name": "ЦЕНТРСПЕЦМЕТАЛЛ",
+  "city": "Тула",
+  "cityPrepositional": "Туле",
+  "region": "Тульская область",
+  "country": "RU",
   "canonicalBase": "https://a9252233314-dotcom.github.io/Centrspetsmetall/",
   "previewBase": "https://centrspetsmetall.a9252233314.chatgpt.site/",
   "email": "csm-factory@bk.ru",
