@@ -13,7 +13,7 @@ function renderProducts(filter='all'){
   const grid=$('product-grid');grid.replaceChildren();
   const visible=products.filter(product=>filter==='all'||product.category===filter);
   visible.forEach(product=>{
-    const card=make('article','product-card');card.dataset.id=product.id;
+    const card=make('article','product-card');card.dataset.id=product.id;card.dataset.catalogPhoto=String(!!product.catalogPhoto);
     const imageButton=make('button','product-image-button');imageButton.type='button';imageButton.setAttribute('aria-label','Открыть: '+product.name);imageButton.addEventListener('click',()=>showProduct(product.id));
     const image=make('img');image.src=product.image;image.alt=product.imageAlt||product.name;image.loading='lazy';image.width=650;image.height=480;
     imageButton.append(image,make('span','card-tag',product.tag));
