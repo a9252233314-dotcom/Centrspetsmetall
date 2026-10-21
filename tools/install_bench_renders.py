@@ -13,4 +13,4 @@ for b in json.loads((ROOT/'benches.json').read_text(encoding='utf-8')):
         im.convert('RGB').save(ROOT/'assets/benches'/f"{b['id']}-render.webp",quality=94)
     manifest[b['id']]=info
 (ROOT/'assets/benches/render-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
-print('Installed three geometry-matched Cycles renders')
+print('Installed',len(manifest),'geometry-matched Cycles renders')

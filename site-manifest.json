@@ -34,7 +34,10 @@
     "blagoustroystvo/chugunnye-skameyki/",
     "products/skameyka-park/",
     "products/skamya-liniya/",
-    "products/skameyka-uzor/"
+    "products/skameyka-uzor/",
+    "products/skamya-duga/",
+    "products/skameyka-potok/",
+    "products/parametricheskaya-skamya-ritm/"
   ],
   "productRoutes": {
     "bowl-classic": "products/kostrovaya-chasha/",
@@ -53,6 +56,9 @@
   "benchProjectRoutes": {
     "park": "products/skameyka-park/",
     "line": "products/skamya-liniya/",
-    "ornament": "products/skameyka-uzor/"
+    "ornament": "products/skameyka-uzor/",
+    "arc": "products/skamya-duga/",
+    "flow": "products/skameyka-potok/",
+    "rhythm": "products/parametricheskaya-skamya-ritm/"
   }
 }

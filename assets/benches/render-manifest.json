@@ -13,5 +13,20 @@
     "geometry_sha256": "9c3b318313c75b605b1327ecaf7846d6ebaf792bb4be9c26d1989bbf216ab524",
     "renderer": "Blender 4.2.23 LTS Cycles",
     "samples": 32
+  },
+  "arc": {
+    "geometry_sha256": "b11f6690befbdabe75af80edb9bc0518bd1c75ded174ef27fffd5ab9f130de03",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "flow": {
+    "geometry_sha256": "c23ff030fc59310aaae0455af76c93cdbefd5264ef5fc726dae83cd5810af8ae",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
+  },
+  "rhythm": {
+    "geometry_sha256": "fbc63157f95303caf1fc39e29b609f9df174d8cb2312526794a5f10d67938553",
+    "renderer": "Blender 4.2.23 LTS Cycles",
+    "samples": 32
   }
 }

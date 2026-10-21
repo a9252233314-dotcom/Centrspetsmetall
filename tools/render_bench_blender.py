@@ -55,7 +55,8 @@ def make_scene(b):
         bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT');obj.select_set(False)
         objects.append(obj)
     # A cast side is a union, not a set of visibly intersecting bars.
-    for group in ('support-left','support-right'):
+    union_groups=['support-left','support-right']+sorted({o['part_group'] for o in objects if o['part_group'].startswith('rib-')})
+    for group in union_groups:
         members=[o for o in objects if o.get('part_group')==group]
         target=members[0];collection=bpy.data.collections.new('Boolean operands '+group);scene.collection.children.link(collection)
         for o in members[1:]:collection.objects.link(o)
