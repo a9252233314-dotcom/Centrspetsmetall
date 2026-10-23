@@ -8,6 +8,7 @@ from bench_catalog import BENCHES, BENCH_ROUTE, prepare_assets, bench_cards, tea
 from lamp_catalog import LAMPS, LAMP_ROUTE, prepare_assets as prepare_lamp_assets, lamp_cards, teaser as lamp_teaser, build_lamps
 
 from hatch_catalog import HATCHES, HATCH_ROUTE, prepare_assets as prepare_hatch_assets, hatch_cards, teaser as hatch_teaser, build_hatches
+from stove_catalog import build_stove_page
 
 ROOT=Path(__file__).resolve().parent
 CONFIG=json.loads((ROOT/'site.config.json').read_text(encoding='utf-8'))
@@ -22,6 +23,7 @@ BENCH_CSS_VERSION=hashlib.sha256((ROOT/'bench-catalog.css').read_bytes()).hexdig
 BASE=CONFIG['canonicalBase'].rstrip('/')+'/'
 NAME=CONFIG['name']; EMAIL=CONFIG['email']
 SLUGS={'bowl-classic':'kostrovaya-chasha','bowl-decor':'chasha-na-figurnyh-oporah','stove':'chugunnaya-pech','castings':'litye-detali-i-zagotovki','grill-ring':'koltso-stoleshnitsa-s-reshetkoy','stand':'litaya-podstavka-pod-chashu','pattern':'modelnaya-osnastka','decor-elephant':'figura-slon','decor-wolf':'figura-volk','decor-panels':'dekorativnye-paneli','mangal-relief':'mangal-s-relefom','gazebo':'besedka-s-ochagom'}
+SLUGS['stove-b01']='bannaya-chugunnaya-pech-b01'
 CATEGORIES={
  'fire':{'slug':'kostrovye-chashi','name':'Чаши и мангалы','title':'Костровые чаши, мангалы и комплектующие','text':'Костровые чаши, фигурные опоры, кольца и решётки для места отдыха на участке. В каталоге — примеры исполнения. Размер, материал, состав комплекта и стоимость согласуем под вашу задачу.','icon':'bowl'},
  'stoves':{'slug':'chugunnye-pechi','name':'Чугунные печи','title':'Чугунные печи и литые элементы','text':'Изготовление чугунных печей и отдельных литых деталей по согласованному исполнению. Посмотрите фотографии образцов и расскажите, какое изделие вам нужно.','icon':'stove'},
@@ -104,9 +106,9 @@ def page(path,title,description,content,breadcrumbs=None,extra_schema=None,img='
     target.parent.mkdir(parents=True,exist_ok=True);target.write_text(html,encoding='utf-8')
     if not noindex:PAGES.append(path)
 def card(p,r):
-    status='model' if p.get('imageCaption') and p['category']=='decor' else ('project' if p['category']=='projects' else '')
+    status='model' if p.get('imageCaption') and p['category']=='decor' else ('project' if p['category']=='projects' or p.get('projectConcept') else '')
     cap=f'<p class="model-caption">{e(p["imageCaption"])}</p>' if p.get('imageCaption') else ''
-    return f'''<article class="product-card" data-product-id="{e(p['id'])}" data-search="{e((p['name']+' '+p['categoryLabel']+' '+p['description']).lower())}"><a class="product-media" href="{r}{route(p)}" aria-label="{e(p['name'])}">{image(p['image'],p.get('imageAlt',p['name']),r)}<span class="product-status {status}">{e(p['tag'])}</span></a><div class="product-body"><p class="product-category">{e(p['categoryLabel'])}</p><h3><a href="{r}{route(p)}">{e(p['name'])}</a></h3><p>{e(p['subtitle'])}</p>{cap}<div class="card-foot"><span>{'Проект в разработке' if p['category']=='projects' else 'Стоимость по запросу'}</span><a href="{r}{route(p)}">Подробнее <span aria-hidden="true">↗</span></a></div></div></article>'''
+    return f'''<article class="product-card" data-product-id="{e(p['id'])}" data-search="{e((p['name']+' '+p['categoryLabel']+' '+p['description']).lower())}"><a class="product-media" href="{r}{route(p)}" aria-label="{e(p['name'])}">{image(p['image'],p.get('imageAlt',p['name']),r)}<span class="product-status {status}">{e(p['tag'])}</span></a><div class="product-body"><p class="product-category">{e(p['categoryLabel'])}</p><h3><a href="{r}{route(p)}">{e(p['name'])}</a></h3><p>{e(p['subtitle'])}</p>{cap}<div class="card-foot"><span>{'Проект в разработке' if p['category']=='projects' or p.get('projectConcept') else 'Стоимость по запросу'}</span><a href="{r}{route(p)}">Подробнее <span aria-hidden="true">↗</span></a></div></div></article>'''
 def cards(items,r):return '<div class="product-grid" id="product-grid">'+''.join(card(p,r) for p in items)+'</div>'
 def faq(items=FAQ):return '<div class="faq">'+''.join(f'<details><summary>{e(q)}</summary><p>{e(a)}</p></details>' for q,a in items)+'</div>'
 def contact_banner():return f'<div class="container"><section class="contact-banner"><div><h2>Есть идея? Давайте обсудим.</h2><p>Пришлите эскиз, фото или описание. Уточним материал, размер, комплектацию и подготовим расчёт.</p></div>{button("Рассказать о задаче")}</section></div>'
@@ -144,6 +146,9 @@ def catalog_pages():
         page(path,title+' — ЦЕНТРСПЕЦМЕТАЛЛ',text,content,bc,[{'@type':'CollectionPage','name':title,'url':absolute(path),'mainEntity':listing}])
 def product_pages():
     for p in PRODUCTS:
+        if p['id']=='stove-b01':
+            build_stove_page(globals(),p)
+            continue
         path=route(p);r='../../';category=CATEGORIES[p['category']]
         thumbs=''.join(f'<button type="button" data-gallery-src="{e(r+photo)}" aria-label="Фото {i}" aria-pressed="{str(i==1).lower()}">{image(photo,'',r)}</button>' for i,photo in enumerate(p['gallery'],1))
         features=''.join(f'<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>' for k,v in p['features'])

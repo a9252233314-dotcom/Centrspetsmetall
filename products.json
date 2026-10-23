@@ -117,6 +117,33 @@
     "catalogPhoto": true
   },
   {
+    "id": "stove-b01",
+    "category": "stoves",
+    "categoryLabel": "Банные печи · проект",
+    "name": "Банная чугунная печь Б01",
+    "subtitle": "Каменка, корзина для камней и выносная топка.",
+    "image": "assets/stoves/b01/basket.webp",
+    "gallery": [
+      "assets/stoves/b01/basket.webp",
+      "assets/stoves/b01/core.webp",
+      "assets/stoves/b01/stone.webp"
+    ],
+    "tag": "Проектный эскиз",
+    "projectConcept": true,
+    "description": "Проект банной чугунной печи Б01: открытая каменка, сетка для камней, выносной топочный тоннель и стеклянная дверца. Три исполнения и интерактивная 3D-модель.",
+    "features": [
+      [
+        "Этап",
+        "Проработка компоновки"
+      ],
+      [
+        "Каменка",
+        "Открытая"
+      ]
+    ],
+    "note": "Проектный эскиз. Конструкция и характеристики требуют разработки и испытаний."
+  },
+  {
     "id": "castings",
     "category": "industry",
     "categoryLabel": "Промышленное литьё",
