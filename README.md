@@ -2,10 +2,10 @@
 
 Сайт продукции и литейного производства в Туле: главная, каталог, отдельные страницы изделий, производственные возможности и запросы на изготовление.
 
-- [Основной публичный сайт](https://a9252233314-dotcom.github.io/Centrspetsmetall/).
+- [Основной публичный сайт](https://csm-lit.ru/).
 - [Копия Sites с прежним доступом владельца](https://centrspetsmetall.a9252233314.chatgpt.site/).
-- [Каталог](https://a9252233314-dotcom.github.io/Centrspetsmetall/catalog/).
-- [Новые направления](https://a9252233314-dotcom.github.io/Centrspetsmetall/blagoustroystvo/).
+- [Каталог](https://csm-lit.ru/catalog/).
+- [Новые направления](https://csm-lit.ru/blagoustroystvo/).
 - [SEO: реализованное и дальнейшие шаги](docs/seo.md).
 
 ## Структура
@@ -40,7 +40,7 @@ GitHub Pages публикует ветку `main`, папку `/ (root)`. Ком
 
 Копию Sites необходимо обновлять отдельно: синхронизировать файлы сайта в `../Centrspetsmetall/dist/`, сохранить существующий `.openai/hosting.json` и настройки доступа, выполнить поддерживаемую публикацию Sites. Обновление GitHub само по себе не меняет `chatgpt.site`.
 
-Основной адрес для canonical и Sitemap задаёт `canonicalBase`. При подключении собственного домена измените его, пересоберите сайт и настройте домен и перенаправления на хостинге. Файл robots.txt проекта GitHub Pages не управляет корнем общего домена; подробности в [SEO-документации](docs/seo.md).
+Основной адрес для canonical и Sitemap — `https://csm-lit.ru/`, он задан в `canonicalBase`. Файл `CNAME` закрепляет домен за публикацией GitHub Pages. DNS и HTTPS требуют отдельной проверки; настройки приведены в [инструкции подключения домена](docs/domain.md). Копия Sites обновляется отдельно.
 
 ## Изделия и материалы
 
