@@ -1,7 +1,7 @@
 'use strict';
 document.documentElement.classList.add('js');
 const root=document.body.dataset.root||'./';
-const email='csm-factory@bk.ru';
+const email=document.querySelector('.footer-contacts .email').textContent.trim();
 const requestDialog=document.getElementById('request-dialog');
 const form=document.getElementById('request-form');
 const status=document.getElementById('request-status');
