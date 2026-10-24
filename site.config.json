@@ -1,5 +1,5 @@
 {
-  "name": "ЦЕНТРСПЕЦМЕТАЛЛ",
+  "name": "Тульская литейная мануфактура",
   "city": "Тула",
   "cityPrepositional": "Туле",
   "region": "Тульская область",
@@ -7,6 +7,21 @@
   "canonicalBase": "https://csm-lit.ru/",
   "previewBase": "https://centrspetsmetall.a9252233314.chatgpt.site/",
   "email": "info@brassart.ru",
-  "phones": ["+7 (926) 391-06-55"],
-  "updated": "2026-10-23"
+  "phones": [
+    "+7 (926) 391-06-55"
+  ],
+  "updated": "2026-10-24",
+  "shortName": "ТЛМ",
+  "logo": "assets/tlm-logo.svg",
+  "legalEntity": {
+    "name": "ООО «Сфералит»",
+    "address": "300016, Тульская область, г.о. Город Тула, г. Тула, ул. Дачная, дом 23А",
+    "inn": "7100007235",
+    "kpp": "710001001",
+    "ogrn": "1217100007080",
+    "account": "40702810243100004450",
+    "bank": "ПАО АКБ \"АВАНГАРД\"",
+    "bik": "044525201",
+    "correspondentAccount": "30101810000000000201"
+  }
 }

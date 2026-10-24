@@ -44,7 +44,8 @@
     "blagoustroystvo/lyuki-i-kryshki/",
     "products/chugunnyy-lyuk-orbita/",
     "products/kvadratnyy-lyuk-kvartal/",
-    "products/parametricheskiy-lyuk-volna/"
+    "products/parametricheskiy-lyuk-volna/",
+    "requisites/"
   ],
   "productRoutes": {
     "bowl-classic": "products/kostrovaya-chasha/",
