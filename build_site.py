@@ -4,6 +4,7 @@ from html import escape
 from functools import lru_cache
 from PIL import Image
 import json, hashlib
+from analytics import with_metrika
 from bench_catalog import BENCHES, BENCH_ROUTE, prepare_assets, bench_cards, teaser as bench_teaser, build_benches
 from lamp_catalog import LAMPS, LAMP_ROUTE, prepare_assets as prepare_lamp_assets, lamp_cards, teaser as lamp_teaser, build_lamps
 
@@ -105,7 +106,7 @@ def page(path,title,description,content,breadcrumbs=None,extra_schema=None,img='
     head=f'''<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)}</title><meta name="description" content="{e(description)}"><meta name="theme-color" content="#233e32"><meta name="robots" content="{'noindex,follow' if noindex else 'index,follow,max-image-preview:large'}"><link rel="canonical" href="{e(canonical)}"><link rel="icon" href="{r}assets/tlm-logo.svg" type="image/svg+xml"><meta property="og:type" content="website"><meta property="og:locale" content="ru_RU"><meta property="og:site_name" content="{NAME}"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(description)}"><meta property="og:url" content="{e(canonical)}"><meta property="og:image" content="{e(absolute(img))}"><meta property="og:image:alt" content="Изделия Тульская литейная мануфактура"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="{r}modern.css?v={CSS_VERSION}"><link rel="stylesheet" href="{r}bench-catalog.css?v={BENCH_CSS_VERSION}"><link rel="stylesheet" href="{r}lamp-catalog.css?v={LAMP_CSS_VERSION}"><link rel="stylesheet" href="{r}hatch-catalog.css?v={HATCH_CSS_VERSION}"><script src="{r}modern.js?v={JS_VERSION}" defer></script><script type="application/ld+json">{json.dumps({'@context':'https://schema.org','@graph':schema},ensure_ascii=False).replace('</','<\\/')}</script></head>'''
     html=head+f'<body data-root="{r}">'+header(r)+(crumbs(r,breadcrumbs) if breadcrumbs else '')+'<main id="main">'+content+'</main>'+footer(r)+dialog()+'</body></html>\n'
     target=ROOT/path/'index.html' if path else ROOT/'index.html'
-    target.parent.mkdir(parents=True,exist_ok=True);target.write_text(html,encoding='utf-8')
+    target.parent.mkdir(parents=True,exist_ok=True);target.write_text(with_metrika(html),encoding='utf-8')
     if not noindex:PAGES.append(path)
 def card(p,r):
     status='model' if p.get('imageCaption') and p['category']=='decor' else ('project' if p['category']=='projects' or p.get('projectConcept') else '')
@@ -192,7 +193,7 @@ def not_found():
     # Use absolute canonical links on 404, which may be requested at any nesting depth.
     content='<section class="container not-found"><p class="eyebrow">Страница не найдена</p><h1>404</h1><p>Возможно, адрес изменился. Вернитесь в каталог или расскажите нам, какое изделие вы ищете.</p><a class="button" href="'+absolute('catalog/')+'">Перейти в каталог ↗</a></section>'
     html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Страница не найдена — Тульская литейная мануфактура</title><meta name="robots" content="noindex,follow"><link rel="stylesheet" href="'+absolute('modern.css')+'"></head><body>'+content+'</body></html>\n'
-    (ROOT/'404.html').write_text(html,encoding='utf-8')
+    (ROOT/'404.html').write_text(with_metrika(html),encoding='utf-8')
 
 def direction_route(d):
     return 'blagoustroystvo/'+d['slug']+'/'

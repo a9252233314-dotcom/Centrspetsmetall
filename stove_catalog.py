@@ -2,6 +2,7 @@
 from pathlib import Path
 from html import escape
 import hashlib,json,re
+from analytics import with_metrika
 
 def build_stove_page(site,product):
     root=site['ROOT'];path=site['route'](product);url=site['absolute'](path)
@@ -26,4 +27,4 @@ def build_stove_page(site,product):
     html=html.replace('.wordmark{font-size:16px;', '.wordmark{display:flex;align-items:center;gap:12px;max-width:400px;font-size:15px;')
     html=html.replace('МЕТАЛЛ Производство', 'МЕТАЛЛ. Производство')
     html=html.replace('</footer>', '<a href="../../requisites/" style="display:block;margin-bottom:20px;font-size:12px">Реквизиты ООО «Сфералит» ↗</a></footer>')
-    target=root/path/'index.html';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(html,encoding='utf-8');site['PAGES'].append(path)
+    target=root/path/'index.html';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(with_metrika(html),encoding='utf-8');site['PAGES'].append(path)
